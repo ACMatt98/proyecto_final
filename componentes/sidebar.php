@@ -15,13 +15,13 @@
 
     <!-- Nav Item - Dashboard -->
     <li class="nav-item active">
-        <a class="nav-link" href="tables.html">
+        <a class="nav-link" href="?page=clientes">
             <i class="bi bi-person-badge-fill"></i>
             <span>Clientes</span></a>
     </li>
 
     <li class="nav-item active">
-        <a class="nav-link" href="index.html">
+        <a class="nav-link" href="?page=presupuestos"> 
             <i class="bi bi-calculator-fill"></i>
             <span>Presupuestos</span></a>
     </li>
@@ -39,7 +39,7 @@
     </li>
 
     <li class="nav-item active">
-        <a class="nav-link" href="index.html">
+        <a class="nav-link" href="?page=comprobante_compra">
             <i class="bi bi-cart-check-fill"></i>
             <span>Comprobantes de compra</span></a>
     </li>
@@ -51,7 +51,7 @@
     </li>
 
     <li class="nav-item active">
-        <a class="nav-link" href="index.html">
+        <a class="nav-link" href="?page=proveedores">
             <i class="bi bi-truck"></i>
             <span>Proveedores</span></a>
     </li>
@@ -63,7 +63,7 @@
     </li>
 
     <li class="nav-item active">
-        <a class="nav-link" href="index.html">
+        <a class="nav-link" href="./pages/login.php">
             <i class="bi bi-key-fill"></i>
             <span>Login</span></a>
     </li>
