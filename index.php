@@ -22,6 +22,8 @@
     <!-- Custom styles for this page -->
     <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.datatables.net/v/bs5/dt-2.2.2/datatables.min.css" rel="stylesheet" integrity="sha384-M6C9anzq7GcT0g1mv0hVorHndQDVZLVBkRVdRb2SsQT7evLamoeztr1ce+tvn+f2" crossorigin="anonymous">
+ 
 
 </head>
 
@@ -40,7 +42,21 @@
 
                 <?php include 'componentes/navbar.php' ?>
 
-                <?php include 'pages/clientes.php' ?>
+               <?php
+                if (isset($_GET['page'])) {
+                    $page = $_GET['page'];
+                    $file = "pages/{$page}.php";
+                    
+                    if (file_exists($file)) {
+                        include $file;
+                    } else {
+                        echo "Página no encontrada";
+                    }
+                } else {
+                    // Página por defecto
+                    include 'pages/clientes.php';
+                }
+                ?>
 
             </div>
             <!-- End of Main Content -->
@@ -102,6 +118,10 @@
     <!-- Page level custom scripts -->
     <script src="js/demo/chart-area-demo.js"></script>
     <script src="js/demo/chart-pie-demo.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
 
 </body>
 
