@@ -3,7 +3,7 @@
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
     <!-- Sidebar - Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php">
         <div class="sidebar-brand-icon rotate-n-15">
             <i class="bi bi-cake-fill"></i>
         </div>
@@ -27,13 +27,13 @@
     </li>
 
     <li class="nav-item active">
-        <a class="nav-link" href="index.html">
+        <a class="nav-link" href="?page=productos_terminados">
             <i class="bi bi-cake2-fill"></i>
             <span>Productos terminados</span></a>
     </li>
 
     <li class="nav-item active">
-        <a class="nav-link" href="index.html">
+        <a class="nav-link" href="?page=receta">
             <i class="bi bi-card-list"></i>
             <span>Recetas</span></a>
     </li>
@@ -45,7 +45,7 @@
     </li>
 
     <li class="nav-item active">
-        <a class="nav-link" href="index.html">
+        <a class="nav-link" href="?page=comprobante_venta">
             <i class="bi bi-cash-coin"></i>
             <span>Comprobates de venta</span></a>
     </li>
@@ -57,16 +57,20 @@
     </li>
 
     <li class="nav-item active">
-        <a class="nav-link" href="index.html">
+        <a class="nav-link" href="?page=materiales">
             <i class="bi bi-boxes"></i>
             <span>Materiales</span></a>
     </li>
 
+    
+
+      
     <li class="nav-item active">
-        <a class="nav-link" href="./pages/login.php">
-            <i class="bi bi-key-fill"></i>
-            <span>Login</span></a>
+        <a class="nav-link" href="session/cerrar_sesion.php">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Cerrar Sesión</span></a>
     </li>
+    
 
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
