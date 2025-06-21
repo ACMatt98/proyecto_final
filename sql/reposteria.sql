@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 22-05-2025 a las 17:22:48
+-- Tiempo de generación: 10-06-2025 a las 21:15:13
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -97,18 +97,19 @@ CREATE TABLE `comprobantevta` (
   `id_comprob_vta` int(30) NOT NULL,
   `n_comprob_vta` int(20) NOT NULL,
   `tipo_factura_vta` varchar(10) NOT NULL,
-  `detalles` text DEFAULT NULL
+  `detalles` text DEFAULT NULL,
+  `id_cliente` int(30) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
 --
 -- Volcado de datos para la tabla `comprobantevta`
 --
 
-INSERT INTO `comprobantevta` (`id_comprob_vta`, `n_comprob_vta`, `tipo_factura_vta`, `detalles`) VALUES
-(1, 1, 'A', 'vendido'),
-(2, 2, 'D', 'vendido'),
-(3, 3, 'C', 'vendido'),
-(4, 4, 'B', 'vendido');
+INSERT INTO `comprobantevta` (`id_comprob_vta`, `n_comprob_vta`, `tipo_factura_vta`, `detalles`, `id_cliente`) VALUES
+(1, 1, 'A', 'vendido', 4),
+(2, 2, 'D', 'vendido', 1),
+(3, 3, 'C', 'vendido', 6),
+(4, 4, 'B', 'vendido', 2);
 
 -- --------------------------------------------------------
 
@@ -192,8 +193,11 @@ CREATE TABLE `materiales` (
 --
 
 INSERT INTO `materiales` (`id_materiales`, `nombre_material`, `existencia`, `marca`) VALUES
-(1, 'Azucar', 3, 'Chango'),
-(2, 'Chocolate Amargo', 2, 'Mapsa');
+(1, 'Azucar Mascabo', 3, 'Chango'),
+(2, 'Chocolate Amargo', 2, 'Mapsa'),
+(3, 'Limon', 4, 'De la esquina'),
+(4, 'Azucar Blanca', 2, 'Chango'),
+(5, 'Harina 0000', 4, 'Caserita');
 
 -- --------------------------------------------------------
 
@@ -270,6 +274,14 @@ CREATE TABLE `receta_estandar` (
   `id_producto_term` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
+--
+-- Volcado de datos para la tabla `receta_estandar`
+--
+
+INSERT INTO `receta_estandar` (`id_receta_estandar`, `costo_receta`, `nomb_receta`, `id_producto_term`) VALUES
+(1, 3250.00, 'Lemon Pie', 1),
+(2, 3250.00, 'Lemon Pie', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -337,7 +349,8 @@ ALTER TABLE `comprobantecompra`
 -- Indices de la tabla `comprobantevta`
 --
 ALTER TABLE `comprobantevta`
-  ADD PRIMARY KEY (`id_comprob_vta`);
+  ADD PRIMARY KEY (`id_comprob_vta`),
+  ADD KEY `fk_comprobantevta_cliente` (`id_cliente`);
 
 --
 -- Indices de la tabla `detallecomprob_cpra`
@@ -472,7 +485,7 @@ ALTER TABLE `estado_presup`
 -- AUTO_INCREMENT de la tabla `materiales`
 --
 ALTER TABLE `materiales`
-  MODIFY `id_materiales` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_materiales` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `presupuesto`
@@ -490,7 +503,7 @@ ALTER TABLE `proveedor`
 -- AUTO_INCREMENT de la tabla `receta_estandar`
 --
 ALTER TABLE `receta_estandar`
-  MODIFY `id_receta_estandar` int(10) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_receta_estandar` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -519,6 +532,12 @@ ALTER TABLE `cobro`
 --
 ALTER TABLE `comprobantecompra`
   ADD CONSTRAINT `fk_id_proveedor` FOREIGN KEY (`id_proveedor`) REFERENCES `proveedor` (`id_proveedor`);
+
+--
+-- Filtros para la tabla `comprobantevta`
+--
+ALTER TABLE `comprobantevta`
+  ADD CONSTRAINT `fk_comprobantevta_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `cliente` (`id_cliente`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `detallecomprob_cpra`
