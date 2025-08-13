@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 10-06-2025 a las 21:15:13
+-- Tiempo de generación: 13-08-2025 a las 01:00:33
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -65,6 +65,16 @@ CREATE TABLE `cobro` (
   `senia` float(10,2) NOT NULL,
   `id_comprob_vta` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
+
+--
+-- Volcado de datos para la tabla `cobro`
+--
+
+INSERT INTO `cobro` (`id_cobro`, `precio_total_cobro`, `fecha_cobro`, `senia`, `id_comprob_vta`) VALUES
+(1, 15000.00, '2025-06-18', 5000.00, 1),
+(2, 12000.00, '2025-06-18', 4000.00, 2),
+(3, 18000.00, '2025-06-19', 6000.00, 3),
+(4, 9000.00, '2025-06-19', 3000.00, 4);
 
 -- --------------------------------------------------------
 
@@ -155,6 +165,16 @@ CREATE TABLE `detalle_receta` (
   `id_materiales` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
+--
+-- Volcado de datos para la tabla `detalle_receta`
+--
+
+INSERT INTO `detalle_receta` (`id_detalle_receta`, `cantidad_nec`, `unidad_medida`, `id_receta_estandar`, `id_materiales`) VALUES
+(1, 321.00, 'gr', 1003, 1),
+(2, 150.00, 'gr', 1004, 1),
+(3, 100.00, 'gr', 1004, 4),
+(4, 350.00, 'gr', 1004, 5);
+
 -- --------------------------------------------------------
 
 --
@@ -197,7 +217,8 @@ INSERT INTO `materiales` (`id_materiales`, `nombre_material`, `existencia`, `mar
 (2, 'Chocolate Amargo', 2, 'Mapsa'),
 (3, 'Limon', 4, 'De la esquina'),
 (4, 'Azucar Blanca', 2, 'Chango'),
-(5, 'Harina 0000', 4, 'Caserita');
+(5, 'Harina 0000', 4, 'Caserita'),
+(6, 'Sal', 3, 'Celusal');
 
 -- --------------------------------------------------------
 
@@ -216,6 +237,16 @@ CREATE TABLE `presupuesto` (
   `id_comprob_vta` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish2_ci;
 
+--
+-- Volcado de datos para la tabla `presupuesto`
+--
+
+INSERT INTO `presupuesto` (`id_presupuesto`, `fecha_presup`, `lugar`, `precio_total_presup`, `mano_obra`, `id_estado_presupuesto`, `id_cliente`, `id_comprob_vta`) VALUES
+(1, '2024-03-15', 'Salón Los Pinos', 45000.00, 15000.00, 2, 1, 1),
+(2, '2024-03-20', 'Casa de familia', 25000.00, 8000.00, 1, 2, 2),
+(3, '2024-03-25', 'Club Social', 65000.00, 20000.00, 2, 3, 3),
+(4, '2024-04-01', 'Salón de Eventos Luna', 35000.00, 12000.00, 1, 4, 4);
+
 -- --------------------------------------------------------
 
 --
@@ -223,7 +254,7 @@ CREATE TABLE `presupuesto` (
 --
 
 CREATE TABLE `producto_terminado` (
-  `id_producto_term` int(10) NOT NULL,
+  `id_producto_term` int(11) NOT NULL,
   `nomb_producto` varchar(30) NOT NULL,
   `precio_venta` float(10,2) NOT NULL,
   `costo_produccion` float(10,2) NOT NULL,
@@ -235,8 +266,10 @@ CREATE TABLE `producto_terminado` (
 --
 
 INSERT INTO `producto_terminado` (`id_producto_term`, `nomb_producto`, `precio_venta`, `costo_produccion`, `stock`) VALUES
-(1, 'Lemon Pie', 6500.00, 4700.00, 3),
-(2, 'Cheese Cake', 8000.00, 6500.00, 1);
+(1000, 'Torta de Manzana Invertida', 8500.00, 7000.00, 2),
+(1001, 'Cheese Cake', 8500.00, 6500.00, 2),
+(1002, 'Lemon Pie', 6500.00, 4700.00, 3),
+(1003, 'Torta Alemana', 10000.00, 8500.00, 1);
 
 -- --------------------------------------------------------
 
@@ -279,8 +312,9 @@ CREATE TABLE `receta_estandar` (
 --
 
 INSERT INTO `receta_estandar` (`id_receta_estandar`, `costo_receta`, `nomb_receta`, `id_producto_term`) VALUES
-(1, 3250.00, 'Lemon Pie', 1),
-(2, 3250.00, 'Lemon Pie', 1);
+(1, 3250.00, 'Lemon Pie', 1002),
+(1003, 0.00, '1221', 1000),
+(1004, 0.00, '12000', 1000);
 
 -- --------------------------------------------------------
 
@@ -366,7 +400,7 @@ ALTER TABLE `detallecomprob_cpra`
 ALTER TABLE `detalle_presupuesto`
   ADD PRIMARY KEY (`id_detalle_presupuesto`),
   ADD KEY `id_presupuesto` (`id_presupuesto`),
-  ADD KEY `id_producto_term` (`id_producto_term`);
+  ADD KEY `fk_detalle_producto` (`id_producto_term`);
 
 --
 -- Indices de la tabla `detalle_receta`
@@ -414,7 +448,7 @@ ALTER TABLE `proveedor`
 --
 ALTER TABLE `receta_estandar`
   ADD PRIMARY KEY (`id_receta_estandar`),
-  ADD KEY `fk_id_producto_term` (`id_producto_term`);
+  ADD KEY `fk_receta_producto` (`id_producto_term`);
 
 --
 -- Indices de la tabla `roles`
@@ -437,13 +471,13 @@ ALTER TABLE `usuario`
 -- AUTO_INCREMENT de la tabla `cliente`
 --
 ALTER TABLE `cliente`
-  MODIFY `id_cliente` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id_cliente` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `cobro`
 --
 ALTER TABLE `cobro`
-  MODIFY `id_cobro` int(30) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_cobro` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `comprobantecompra`
@@ -473,7 +507,7 @@ ALTER TABLE `detalle_presupuesto`
 -- AUTO_INCREMENT de la tabla `detalle_receta`
 --
 ALTER TABLE `detalle_receta`
-  MODIFY `id_detalle_receta` int(10) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_detalle_receta` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `estado_presup`
@@ -485,13 +519,19 @@ ALTER TABLE `estado_presup`
 -- AUTO_INCREMENT de la tabla `materiales`
 --
 ALTER TABLE `materiales`
-  MODIFY `id_materiales` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_materiales` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `presupuesto`
 --
 ALTER TABLE `presupuesto`
-  MODIFY `id_presupuesto` int(10) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_presupuesto` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `producto_terminado`
+--
+ALTER TABLE `producto_terminado`
+  MODIFY `id_producto_term` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1005;
 
 --
 -- AUTO_INCREMENT de la tabla `proveedor`
@@ -503,7 +543,7 @@ ALTER TABLE `proveedor`
 -- AUTO_INCREMENT de la tabla `receta_estandar`
 --
 ALTER TABLE `receta_estandar`
-  MODIFY `id_receta_estandar` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_receta_estandar` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1005;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -550,8 +590,8 @@ ALTER TABLE `detallecomprob_cpra`
 -- Filtros para la tabla `detalle_presupuesto`
 --
 ALTER TABLE `detalle_presupuesto`
-  ADD CONSTRAINT `id_presupuesto` FOREIGN KEY (`id_presupuesto`) REFERENCES `presupuesto` (`id_presupuesto`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `id_producto_term` FOREIGN KEY (`id_producto_term`) REFERENCES `producto_terminado` (`id_producto_term`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_detalle_producto` FOREIGN KEY (`id_producto_term`) REFERENCES `producto_terminado` (`id_producto_term`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `id_presupuesto` FOREIGN KEY (`id_presupuesto`) REFERENCES `presupuesto` (`id_presupuesto`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `detalle_receta`
@@ -572,7 +612,7 @@ ALTER TABLE `presupuesto`
 -- Filtros para la tabla `receta_estandar`
 --
 ALTER TABLE `receta_estandar`
-  ADD CONSTRAINT `fk_id_producto_term` FOREIGN KEY (`id_producto_term`) REFERENCES `producto_terminado` (`id_producto_term`);
+  ADD CONSTRAINT `fk_receta_producto` FOREIGN KEY (`id_producto_term`) REFERENCES `producto_terminado` (`id_producto_term`) ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `usuario`

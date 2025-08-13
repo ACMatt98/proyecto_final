@@ -73,15 +73,17 @@
         </div>
 
         <!-- Modal para CRUD -->
-        <div class="modal fade" id="modalCRUD" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form id="formComprobantes">    
-                        <div class="modal-body">
+<div class="modal fade" id="modalCRUD" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formComprobantes">    
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label for="fecha" class="col-form-label">Fecha:</label>
                                 <input type="date" class="form-control" id="fecha">
@@ -109,14 +111,66 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" id="btnGuardar" class="btn btn-dark">Guardar</button>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="col-form-label">Materiales Comprados:</label>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="tablaMaterialesCompra">
+                                        <thead>
+                                            <tr>
+                                                <th>Material</th>
+                                                <th>Cantidad</th>
+                                                <th>Precio Unitario</th>
+                                                <th>Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="materialesCompraBody"></tbody>
+                                    </table>
+                                    <button type="button" class="btn btn-success btn-sm" id="btnAgregarMaterial">
+                                        <i class="bi bi-plus-circle"></i> Agregar Material
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </form>    
+                    </div>
                 </div>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="btnGuardar" class="btn btn-dark">Guardar</button>
+                </div>
+            </form>    
         </div>
+    </div>
+</div>
+
+<template id="templateMaterial">
+    <tr>
+        <td>
+            <select class="form-control material-select" required>
+                <option value="">Seleccione material</option>
+                <?php
+                $consulta = "SELECT id_materiales, nombre_material FROM materiales";
+                $resultado = $conexion->prepare($consulta);
+                $resultado->execute();
+                $materiales = $resultado->fetchAll(PDO::FETCH_ASSOC);
+                foreach($materiales as $material) {
+                    echo "<option value='".$material['id_materiales']."'>".$material['nombre_material']."</option>";
+                }
+                ?>
+            </select>
+        </td>
+        <td><input type="number" step="0.01" class="form-control cantidad-input" required></td>
+        <td><input type="number" step="0.01" class="form-control precio-input" required></td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm btnEliminarMaterial">
+                <i class="bi bi-trash"></i> Eliminar
+            </button>
+        </td>
+    </tr>
+</template>
+
+
         <script src="js/comprobanteCompraScript.js"></script>
     </body>
 </html>
