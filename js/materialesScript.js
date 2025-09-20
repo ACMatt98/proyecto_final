@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalHeader.style.backgroundColor = "#28a745";
         modalHeader.style.color = "white";
         document.querySelector(".modal-title").textContent = "Nuevo Material";
-        const modalCRUD = new bootstrap.Modal(document.querySelector("#modalCRUD"));
+        const modalCRUD = new bootstrap.Modal(document.getElementById("modalCRUD"));
         modalCRUD.show();
         id = null;
         opcion = 1; // alta
@@ -54,17 +54,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const nombre_material = fila.cells[1].textContent;
             const existencia = fila.cells[2].textContent;
             const marca = fila.cells[3].textContent;
+            const unidad_medida = fila.cells[4].textContent;
 
             document.querySelector("#nombre_material").value = nombre_material;
             document.querySelector("#existencia").value = existencia;
             document.querySelector("#marca").value = marca;
+            document.querySelector("#unidad_medida").value = unidad_medida;
             opcion = 2; // editar
 
             const modalHeader = document.querySelector(".modal-header");
             modalHeader.style.backgroundColor = "#007bff";
             modalHeader.style.color = "white";
             document.querySelector(".modal-title").textContent = "Editar Material";
-            const modalCRUD = new bootstrap.Modal(document.querySelector("#modalCRUD"));
+            const modalCRUD = new bootstrap.Modal(document.getElementById("modalCRUD"));
             modalCRUD.show();
         }
     });
@@ -102,8 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const formData = {
             nombre_material: document.querySelector("#nombre_material").value.trim(),
-            existencia: parseInt(document.querySelector("#existencia").value.trim()),
+            existencia: parseFloat(document.querySelector("#existencia").value.trim()),
             marca: document.querySelector("#marca").value.trim(),
+            unidad_medida: document.querySelector("#unidad_medida").value.trim(),
             id,
             opcion
         };
@@ -120,16 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Network response was not ok');
             
             const data = await response.json();
-            const { id_materiales: newId, nombre_material, existencia, marca } = data[0];
-
-            if (opcion === 1) {
-                tablaMateriales.row.add([newId, nombre_material, existencia, marca]).draw();
+            if (data.success) {
+                location.reload();
             } else {
-                tablaMateriales.row(fila).data([newId, nombre_material, existencia, marca]).draw();
+                alert(data.message || 'Error al guardar los datos');
             }
-
-            const modalCRUD = bootstrap.Modal.getInstance(document.querySelector("#modalCRUD"));
-            modalCRUD.hide();
         } catch (error) {
             console.error('Error:', error);
             alert('Error al guardar los datos');

@@ -75,11 +75,11 @@ try {
 
             // Insertar receta con parámetros preparados
             $consulta = "INSERT INTO receta_estandar (nomb_receta, costo_receta, id_producto_term) 
-                        VALUES(:costo_receta, :nomb_receta, :id_producto_term)";
+                        VALUES(:nomb_receta, :costos_receta, :id_producto_term)";
             $resultado = $conexion->prepare($consulta);
             $resultado->execute([
-                ':costo_receta' => $costo_receta,
                 ':nomb_receta' => $nomb_receta,
+                ':costo_receta' => $costo_receta,
                 ':id_producto_term' => $id_producto_term
             ]);
             
