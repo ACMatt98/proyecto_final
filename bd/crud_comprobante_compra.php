@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 include_once '../bd/conexion.php';
 $objeto = new Conexion();
 $conexion = $objeto->Conectar();
@@ -16,7 +19,7 @@ try {
         throw new Exception('Error al decodificar JSON');
     }
 
-    // Validación de datos
+    // Datos recibidos
     $fecha = $data['fecha'] ?? '';
     $n_de_comprob = $data['n_de_comprob'] ?? '';
     $precio_total = $data['precio_total'] ?? 0;
@@ -24,80 +27,162 @@ try {
     $opcion = $data['opcion'] ?? 0;
     $id = $data['id'] ?? null;
     $materiales = $data['materiales'] ?? [];
+    $tipo_factura = $data['tipo_factura'] ?? '';
+    
 
-    if (empty($fecha) || empty($n_de_comprob)) {
-        throw new Exception('Fecha y número de comprobante son requeridos');
+    // Validación según operación
+    if ($opcion == 1 || $opcion == 2) {
+        if (empty($fecha) || empty($n_de_comprob)) {
+            throw new Exception('Fecha y número de comprobante son requeridos');
+        }
+        if ($id_proveedor <= 0) {
+            throw new Exception('Debe seleccionar un proveedor válido');
+        }
+        if (!is_array($materiales) || count($materiales) === 0) {
+            throw new Exception('Debe agregar al menos un material');
+        }
     }
-
-    if ($id_proveedor <= 0) {
-        throw new Exception('Debe seleccionar un proveedor válido');
-    }
-
-    if (!is_array($materiales) || count($materiales) === 0) {
-        throw new Exception('Debe agregar al menos un material');
+    if ($opcion == 3 && !$id) {
+        throw new Exception('ID de comprobante inválido');
     }
 
     $response = ['success' => false];
     $conexion->beginTransaction();
 
-    switch($opcion) {
-        case 1: // Alta
-            // Insertar comprobante
-            $consulta = "INSERT INTO comprobantecompra 
-                        (fecha, n_de_comprob, precio_total, id_proveedor) 
-                        VALUES(:fecha, :n_de_comprob, :precio_total, :id_proveedor)";
-            $resultado = $conexion->prepare($consulta);
-            $resultado->execute([
-                ':fecha' => $fecha,
-                ':n_de_comprob' => $n_de_comprob,
-                ':precio_total' => $precio_total,
-                ':id_proveedor' => $id_proveedor
-            ]);
-            
-            $id_comprobante = $conexion->lastInsertId();
+    if ($opcion == 1) {
+    // Alta: Insertar comprobante de compra y obtener su ID
+    $consulta = "INSERT INTO comprobantecompra (fecha, n_de_comprob, precio_total, id_proveedor, tipo_factura) 
+         VALUES (:fecha, :n_de_comprob, :precio_total, :id_proveedor, :tipo_factura)";
+    $resultado = $conexion->prepare($consulta);
+    $resultado->execute([
+        ':fecha' => $fecha,
+        ':n_de_comprob' => $n_de_comprob,
+        ':precio_total' => $precio_total,
+        ':id_proveedor' => $id_proveedor,
+        ':tipo_factura' => $tipo_factura
+    ]);
+    $id_comprobante = $conexion->lastInsertId();
 
-            // Insertar materiales
-            foreach($materiales as $material) {
-                // Validar material
-                if (empty($material['id_materiales']) || empty($material['cantidad']) || empty($material['precio_unitario'])) {
-                    throw new Exception('Datos de material incompletos');
-                }
+    // Insertar materiales
+    $tipo_factura = $data['tipo_factura'] ?? '';
+    foreach($materiales as &$material) {
+        $material['tipo_factura'] = $tipo_factura;
+    }
+    unset($material);
 
-                // Insertar detalle
-                $consulta = "INSERT INTO detallecomprob_cpra 
-                            (fecha_detalle, precio_unitario, tipo_factura_compra, 
-                            id_compro_comp, id_materiales, cantidad_nec) 
-                            VALUES(NOW(), :precio_unitario, 'A', 
-                            :id_comprobante, :id_materiales, :cantidad)";
-                $resultado = $conexion->prepare($consulta);
-                $resultado->execute([
-                    ':precio_unitario' => $material['precio_unitario'],
-                    ':id_comprobante' => $id_comprobante,
-                    ':id_materiales' => $material['id_materiales'],
-                    ':cantidad' => $material['cantidad']
-                ]);
-                
-                // Actualizar existencia
-                $consulta = "UPDATE materiales SET existencia = existencia + :cantidad 
-                            WHERE id_materiales = :id_materiales";
-                $resultado = $conexion->prepare($consulta);
-                $resultado->execute([
-                    ':cantidad' => $material['cantidad'],
-                    ':id_materiales' => $material['id_materiales']
-                ]);
-            }
+    foreach($materiales as $material) {
+        // --- Conversión a unidad base ---
+        $cantidad = $material['cantidad'];
+        $unidad_medida = $material['unidad_medida'];
 
-            $response = ['success' => true, 'message' => 'Comprobante creado correctamente'];
-            break;
+        if ($unidad_medida === 'Kg') {
+            $cantidad = $cantidad * 1000;
+            $unidad_medida = 'gr';
+        } elseif ($unidad_medida === 'Lt') {
+            $cantidad = $cantidad * 1000;
+            $unidad_medida = 'ml';
+        }
+        // Si es gr, ml o Unidad, no cambia
 
-        // ... (casos para edición y eliminación)
+        if (empty($material['id_materiales']) || empty($cantidad) || empty($material['precio_unitario']) || empty($material['tipo_factura'])) {
+            throw new Exception('Datos de material incompletos');
+        }
+        $consulta = "INSERT INTO detallecomprob_cpra 
+                    (fecha_detalle, precio_unitario, tipo_factura_compra, 
+                    id_compro_comp, id_materiales, cantidad, unidad_medida) 
+                    VALUES(NOW(), :precio_unitario, :tipo_factura, 
+                    :id_comprobante, :id_materiales, :cantidad, :unidad_medida)";
+        $resultado = $conexion->prepare($consulta);
+        $resultado->execute([
+            ':precio_unitario' => $material['precio_unitario'],
+            ':tipo_factura' => $material['tipo_factura'],
+            ':id_comprobante' => $id_comprobante,
+            ':id_materiales' => $material['id_materiales'],
+            ':cantidad' => $cantidad,
+            ':unidad_medida' => $unidad_medida
+        ]);
+        // Actualizar existencia
+        $consulta = "UPDATE materiales SET existencia = existencia + :cantidad 
+                    WHERE id_materiales = :id_materiales";
+        $resultado = $conexion->prepare($consulta);
+        $resultado->execute([
+            ':cantidad' => $cantidad,
+            ':id_materiales' => $material['id_materiales']
+        ]);
+    }
+    $response = ['success' => true, 'message' => 'Comprobante creado correctamente'];
+} elseif ($opcion == 2 && $id) {
+    // Edición: Actualizar comprobante y sus materiales
+    $consulta = "UPDATE comprobantecompra SET fecha=:fecha, n_de_comprob=:n_de_comprob, precio_total=:precio_total, id_proveedor=:id_proveedor, tipo_factura=:tipo_factura WHERE id_compro_comp=:id";
+    $resultado = $conexion->prepare($consulta);
+    $resultado->execute([
+        ':fecha' => $fecha,
+        ':n_de_comprob' => $n_de_comprob,
+        ':precio_total' => $precio_total,
+        ':id_proveedor' => $id_proveedor,
+        ':tipo_factura' => $tipo_factura,
+        ':id' => $id
+    ]);
+
+    // Eliminar materiales anteriores
+    $consulta = "DELETE FROM detallecomprob_cpra WHERE id_compro_comp=:id";
+    $resultado = $conexion->prepare($consulta);
+    $resultado->execute([':id' => $id]);
+
+    // Asignar tipo_factura a cada material
+    $tipo_factura = $data['tipo_factura'] ?? '';
+    foreach($materiales as &$material) {
+        $material['tipo_factura'] = $tipo_factura;
+    }
+    unset($material);
+
+    foreach($materiales as $material) {
+        // --- Conversión a unidad base ---
+        $cantidad = $material['cantidad'];
+        $unidad_medida = $material['unidad_medida'];
+
+        if ($unidad_medida === 'Kg') {
+            $cantidad = $cantidad * 1000;
+            $unidad_medida = 'gr';
+        } elseif ($unidad_medida === 'Lt') {
+            $cantidad = $cantidad * 1000;
+            $unidad_medida = 'ml';
+        }
+        // Si es gr, ml o Unidad, no cambia
+
+        if (empty($material['id_materiales']) || empty($cantidad) || empty($material['precio_unitario']) || empty($material['tipo_factura'])) {
+            throw new Exception('Datos de material incompletos');
+        }
+        $consulta = "INSERT INTO detallecomprob_cpra 
+                    (fecha_detalle, precio_unitario, tipo_factura_compra, 
+                    id_compro_comp, id_materiales, cantidad, unidad_medida) 
+                    VALUES(NOW(), :precio_unitario, :tipo_factura, 
+                    :id_comprobante, :id_materiales, :cantidad, :unidad_medida)";
+        $resultado = $conexion->prepare($consulta);
+        $resultado->execute([
+            ':precio_unitario' => $material['precio_unitario'],
+            ':tipo_factura' => $material['tipo_factura'],
+            ':id_comprobante' => $id,
+            ':id_materiales' => $material['id_materiales'],
+            ':cantidad' => $cantidad,
+            ':unidad_medida' => $unidad_medida
+        ]);
+        // Actualizar existencia si lo necesitas (puedes ajustar la lógica aquí)
+    }
+    $response = ['success' => true, 'message' => 'Comprobante actualizado correctamente'];
+
+    } else {
+        throw new Exception('Operación no válida');
     }
 
     $conexion->commit();
     echo json_encode($response);
 
 } catch (Exception $e) {
-    $conexion->rollBack();
+    if ($conexion->inTransaction()){
+        $conexion->rollBack();
+    }
+    error_log($e->getMessage());
     echo json_encode([
         'success' => false,
         'message' => 'Error: ' . $e->getMessage()

@@ -33,39 +33,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
-    // Template para fila de material
-    const templateMaterial = `
-    <tr>
-        <td>
-            <select class="form-control material-select" required>
-                <option value="">Seleccione material</option>
-                <?php
-                $consulta = "SELECT id_materiales, nombre_material FROM materiales";
-                $resultado = $conexion->prepare($consulta);
-                $resultado->execute();
-                $materiales = $resultado->fetchAll(PDO::FETCH_ASSOC);
-                foreach($materiales as $material) {
-                    echo "<option value='".$material['id_materiales']."'>".$material['nombre_material']."</option>";
-                }
-                ?>
-            </select>
-        </td>
-        <td><input type="number" step="0.01" class="form-control cantidad-input" required></td>
-        <td><input type="number" step="0.01" class="form-control precio-input" required></td>
-        <td>
-            <button type="button" class="btn btn-danger btn-sm btnEliminarMaterial">
-                <i class="bi bi-trash"></i>
-            </button>
-        </td>
-    </tr>`;
-
     // Agregar nuevo material usando template
     document.querySelector('#btnAgregarMaterial').addEventListener('click', () => {
         const template = document.querySelector('#templateMaterial');
         const tbody = document.querySelector('#materialesCompraBody');
         const clone = template.content.cloneNode(true);
         tbody.appendChild(clone);
+    });
+
+    function calcularPrecioTotal() {
+        let total = 0;
+        document.querySelectorAll("#materialesCompraBody tr").forEach(row => {
+            const precio_unitario = parseFloat(row.querySelector('.precio-input').value) || 0;
+            total += precio_unitario;
+        });
+        document.querySelector("#precio_total").value = total;
+    }
+
+    // Listener para cambios en cantidad y precio unitario
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('cantidad-input') || e.target.classList.contains('precio-input')) {
+            calcularPrecioTotal();
+        }
+    });
+
+    // Listener para recalcular al agregar material
+    document.querySelector('#btnAgregarMaterial').addEventListener('click', () => {
+        setTimeout(calcularPrecioTotal, 100); // Espera a que el DOM se actualice
+    });
+
+    // Listener para recalcular al eliminar material
+    document.addEventListener('click', (e) => {
+        if (e.target.matches('.btnEliminarMaterial') || e.target.closest('.btnEliminarMaterial')) {
+            setTimeout(calcularPrecioTotal, 100);
+        }
+    });
+
+
+
+
+
+
+
+    // Cuando se selecciona un material, mostrar la unidad automáticamente
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('material-select')) {
+            const unidad = e.target.selectedOptions[0].getAttribute('data-unidad') || '';
+            e.target.closest('tr').querySelector('.unidad-input').value = unidad;
+        }
     });
 
     // Eliminar material
@@ -76,6 +91,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Handler para borrar comprobante
+    document.addEventListener('click', async (e) => {
+    if (e.target.matches('.btnBorrar')) {
+        fila = e.target.closest("tr");
+        id = parseInt(fila.cells[0].textContent);
+        opcion = 3; // borrar
+
+        if (confirm(`¿Está seguro de eliminar el comprobante: ${id}?`)) {
+            try {
+                const response = await fetch('bd/crud_comprobante_compra.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ opcion, id })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    tablaComprobantes.row(fila).remove().draw();
+                } else {
+                    alert(result.message || 'Error al borrar el comprobante');
+                }
+            } catch (error) {
+                alert('Error al borrar el comprobante');
+            }
+        }
+    }
+});
+
     // Nuevo button handler
     document.querySelector("#btnNuevo").addEventListener('click', () => {
         document.querySelector("#formComprobantes").reset();
@@ -84,8 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalHeader.style.backgroundColor = "#28a745";
         modalHeader.style.color = "white";
         document.querySelector(".modal-title").textContent = "Nuevo Comprobante";
-        const modalCRUD = new bootstrap.Modal(document.querySelector("#modalCRUD"));
-        modalCRUD.show();
+        $('#modalCRUD').modal('show');
         id = null;
         opcion = 1; // alta
     });
@@ -112,9 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (option.text === proveedor) option.selected = true;
             });
 
+            // Seleccionar tipo de factura correcto
+            const tipo_factura = fila.cells[5].textContent.trim(); // Ajusta el índice si es necesario
+            document.querySelector("#factura_global").value = tipo_factura;
+
             // Cargar materiales existentes
             try {
-                const response = await fetch('bd/get_materiales_comprobante.php', {
+                const response = await fetch('bd/get_materiales_compra.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -134,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     const selectMaterial = clone.querySelector('.material-select');
                     const inputCantidad = clone.querySelector('.cantidad-input');
+                    const inputUnidad = clone.querySelector('.unidad-input');
                     const inputPrecio = clone.querySelector('.precio-input');
                     
                     Array.from(selectMaterial.options).forEach(option => {
@@ -141,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     
                     inputCantidad.value = material.cantidad;
+                    inputUnidad.value = material.unidad_medida || '';
                     inputPrecio.value = material.precio_unitario;
                     
                     tbody.appendChild(clone);
@@ -149,27 +196,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error:', error);
                 alert('Error al cargar los materiales del comprobante');
             }
-
+            calcularPrecioTotal();
             opcion = 2; // editar
 
             const modalHeader = document.querySelector(".modal-header");
             modalHeader.style.backgroundColor = "#007bff";
             modalHeader.style.color = "white";
             document.querySelector(".modal-title").textContent = "Editar Comprobante";
-            const modalCRUD = new bootstrap.Modal(document.querySelector("#modalCRUD"));
-            modalCRUD.show();
+            $('#modalCRUD').modal('show');
         }
     });
 
     // Delete button handler 
-    // Eliminar material
     document.addEventListener('click', (e) => {
         if (e.target.closest('.btnEliminarMaterial')) {
             e.target.closest('tr').remove();
         }
     });
 
-    // Form submit handler con validación mejorada
+    // Form submit handler con unidad y cantidad
     document.querySelector("#formComprobantes").addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -184,6 +229,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Obtener el valor de factura global ANTES del bucle
+        const tipo_factura = document.querySelector('#factura_global').value;
+        
         // Recolectar materiales con validación
         const materiales = [];
         let materialesValidos = true;
@@ -191,9 +239,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll("#materialesCompraBody tr").forEach(row => {
             const id_materiales = row.querySelector('.material-select').value;
             const cantidad = row.querySelector('.cantidad-input').value;
+            const unidad_medida = row.querySelector('.unidad-input').value;
             const precio_unitario = row.querySelector('.precio-input').value;
-            
-            if (!id_materiales || !cantidad || !precio_unitario) {
+
+            if (!id_materiales || !cantidad || !precio_unitario ||!unidad_medida || !tipo_factura) {
                 materialesValidos = false;
                 return;
             }
@@ -201,7 +250,9 @@ document.addEventListener('DOMContentLoaded', () => {
             materiales.push({
                 id_materiales,
                 cantidad: parseFloat(cantidad),
-                precio_unitario: parseFloat(precio_unitario)
+                unidad_medida,
+                precio_unitario: parseFloat(precio_unitario),
+                tipo_factura
             });
         });
 
@@ -210,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        
         const formData = {
             fecha: document.querySelector("#fecha").value,
             n_de_comprob: document.querySelector("#n_de_comprob").value.trim(),
@@ -217,7 +269,8 @@ document.addEventListener('DOMContentLoaded', () => {
             id_proveedor: document.querySelector("#id_proveedor").value,
             materiales,
             id,
-            opcion
+            opcion,
+            tipo_factura
         };
 
         try {
@@ -244,6 +297,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
-
-

@@ -3,7 +3,8 @@
     $objeto = new Conexion();
     $conexion = $objeto->Conectar();
 
-    $consulta = 'SELECT id_materiales, nombre_material, existencia, marca FROM materiales';
+    // Incluye unidad_medida en la consulta
+    $consulta = 'SELECT id_materiales, nombre_material, existencia, marca, unidad_medida FROM materiales';
     $resultado = $conexion->prepare($consulta);
     $resultado->execute();
     $data = $resultado->fetchAll(PDO::FETCH_ASSOC);
@@ -43,6 +44,7 @@
                                     <th>Nombre</th>
                                     <th>Existencia</th>
                                     <th>Marca</th>
+                                    <th>Unidad</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -55,6 +57,7 @@
                                     <td><?php echo $dat['nombre_material'] ?></td>
                                     <td><?php echo $dat['existencia'] ?></td>
                                     <td><?php echo $dat['marca'] ?></td>
+                                    <td><?php echo $dat['unidad_medida'] ?></td>
                                     <td></td>
                                 </tr>
                                 <?php
@@ -88,6 +91,10 @@
                             <div class="form-group">
                                 <label for="marca" class="col-form-label">Marca:</label>
                                 <input type="text" class="form-control" id="marca">
+                            </div>
+                            <div class="form-group">
+                                <label for="unidad_medida" class="col-form-label">Unidad de Medida:</label>
+                                <input type="text" class="form-control" id="unidad_medida" placeholder="Ej: kg, g, l, unidad">
                             </div>
                         </div>
                         <div class="modal-footer">

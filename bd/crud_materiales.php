@@ -1,52 +1,64 @@
 <?php
-include_once '../bd/conexion.php';
+include_once 'conexion.php';
 $objeto = new Conexion();
 $conexion = $objeto->Conectar();
 
-// Recibir el JSON y convertirlo a array PHP
-$json = file_get_contents('php://input');
-$data = json_decode($json, true);
+header('Content-Type: application/json');
 
-// Recepción de los datos enviados mediante JSON desde el JS   
-$nombre_material = (isset($data['nombre_material'])) ? $data['nombre_material'] : '';
-$existencia = (isset($data['existencia'])) ? $data['existencia'] : '';
-$marca = (isset($data['marca'])) ? $data['marca'] : '';
-$opcion = (isset($data['opcion'])) ? $data['opcion'] : '';
-$id = (isset($data['id'])) ? $data['id'] : '';
+try {
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
 
-switch($opcion){
-    case 1: //alta
-        $consulta = "INSERT INTO materiales (nombre_material, existencia, marca) 
-                    VALUES('$nombre_material', '$existencia', '$marca') ";			
+    $id = isset($data['id']) ? intval($data['id']) : null;
+    $nombre_material = trim($data['nombre_material'] ?? '');
+    $existencia = floatval($data['existencia'] ?? 0);
+    $marca = trim($data['marca'] ?? '');
+    $unidad_medida = trim($data['unidad_medida'] ?? '');
+    $opcion = intval($data['opcion'] ?? 0);
+
+    if ($opcion === 1) {
+        // Alta
+        if (!$nombre_material || !$existencia || !$marca || !$unidad_medida) {
+            throw new Exception('Todos los campos son obligatorios');
+        }
+        $consulta = "INSERT INTO comprobantecompra (fecha, n_de_comprob, precio_total, id_proveedor, tipo_factura) 
+                    VALUES (:fecha, :n_de_comprob, :precio_total, :id_proveedor, :tipo_factura)";
         $resultado = $conexion->prepare($consulta);
-        $resultado->execute(); 
-
-        $consulta = "SELECT id_materiales, nombre_material, existencia, marca 
-                    FROM materiales ORDER BY id_materiales DESC LIMIT 1";
+        $resultado->execute([
+        ':fecha' => $fecha,
+        ':n_de_comprob' => $n_de_comprob,
+        ':precio_total' => $precio_total,
+        ':id_proveedor' => $id_proveedor,
+        ':tipo_factura' => $tipo_factura
+]);
+        $response = ['success' => true, 'message' => 'Material creado'];
+    } elseif ($opcion === 2 && $id) {
+        // Edición
+        if (!$nombre_material || !$existencia || !$marca || !$unidad_medida) {
+            throw new Exception('Todos los campos son obligatorios');
+        }
+        $consulta = "UPDATE comprobantecompra SET fecha=:fecha, n_de_comprob=:n_de_comprob, precio_total=:precio_total, id_proveedor=:id_proveedor, tipo_factura=:tipo_factura WHERE id_compro_comp=:id";
         $resultado = $conexion->prepare($consulta);
-        $resultado->execute();
-        $data=$resultado->fetchAll(PDO::FETCH_ASSOC);
-        break;
+        $resultado->execute([
+            ':fecha' => $fecha,
+            ':n_de_comprob' => $n_de_comprob,
+            ':precio_total' => $precio_total,
+            ':id_proveedor' => $id_proveedor,
+            ':tipo_factura' => $tipo_factura,
+            ':id' => $id
+]);
+        $response = ['success' => true, 'message' => 'Material actualizado'];
+    } elseif ($opcion === 3 && $id) {
+        // Borrar
+        $consulta = "DELETE FROM materiales WHERE id_materiales=:id";
+        $stmt = $conexion->prepare($consulta);
+        $stmt->execute([':id' => $id]);
+        $response = ['success' => true, 'message' => 'Material eliminado'];
+    } else {
+        throw new Exception('Operación no válida');
+    }
 
-    case 2: //modificación
-        $consulta = "UPDATE materiales SET nombre_material='$nombre_material', existencia='$existencia', 
-                    marca='$marca' WHERE id_materiales='$id' ";		
-        $resultado = $conexion->prepare($consulta);
-        $resultado->execute();        
-        
-        $consulta = "SELECT id_materiales, nombre_material, existencia, marca 
-                    FROM materiales WHERE id_materiales='$id' ";       
-        $resultado = $conexion->prepare($consulta);
-        $resultado->execute();
-        $data=$resultado->fetchAll(PDO::FETCH_ASSOC);
-        break;        
+    echo json_encode($response);
 
-    case 3://baja
-        $consulta = "DELETE FROM materiales WHERE id_materiales='$id' ";		
-        $resultado = $conexion->prepare($consulta);
-        $resultado->execute();                           
-        break;        
-}
-
-print json_encode($data, JSON_UNESCAPED_UNICODE);
-$conexion = NULL;
+} catch (Exception $e) {
+    echo json_encode(['success'
