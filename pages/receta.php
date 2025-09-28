@@ -94,7 +94,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="costo_receta" class="col-form-label">Costo:</label>
-                                        <input type="number" step="0.01" class="form-control" id="costo_receta" required>
+                                        <input type="number" step="0.01" class="form-control" id="costo_receta" readonly>
                                     </div>
                                     <div class="form-group">
                                         <label for="id_producto_term" class="col-form-label">Producto:</label>
@@ -123,6 +123,8 @@
                                                         <th>Material</th>
                                                         <th>Cantidad</th>
                                                         <th>Unidad</th>
+                                                        <th>Precio</th>
+                                                        <th>Subtotal</th>
                                                         <th>Acción</th>
                                                     </tr>
                                                 </thead>
@@ -195,6 +197,12 @@
                 </td>
                 <td>
                     <input type="text" class="form-control unidad-input" required>
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="form-control precio-input" readonly>
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="form-control subtotal-input" readonly>
                 </td>
                 <td>
                     <button type="button" class="btn btn-danger btn-sm btnEliminarIngrediente">

@@ -34,6 +34,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    //Funcion para obtener el precio del matarial
+    async function handleMaterialChange(event) {
+        const selectMaterial = event.target;
+        const row = selectMaterial.closest('tr');
+        const precioInput = row.querySelector('.precio-input');
+        const cantidadInput = row.querySelector('.cantidad-input');
+        const subtotalInput = row.querySelector('.subtotal-input');
+        
+        if (!selectMaterial.value) {
+            precioInput.value = '';
+            subtotalInput.value = '';
+            return;
+        }
+        
+        try {
+            const response = await fetch('bd/get_precio_material.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id_material: parseInt(selectMaterial.value) })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                precioInput.value = result.precio_unitario;
+                calculateSubtotal({ target: cantidadInput });
+            } else {
+                precioInput.value = '0.00';
+                subtotalInput.value = '0.00';
+            }
+        } catch (error) {
+            console.error('Error al obtener precio:', error);
+            precioInput.value = '0.00';
+            subtotalInput.value = '0.00';
+        }
+    }
+
+    //Funcion para calcular el subtotal
+    function calculateSubtotal(event) {
+        const cantidadInput = event.target;
+        const row = cantidadInput.closest('tr');
+        const precioInput = row.querySelector('.precio-input');
+        const subtotalInput = row.querySelector('.subtotal-input');
+        
+        const cantidad = parseFloat(cantidadInput.value) || 0;
+        const precio = parseFloat(precioInput.value) || 0;
+        
+        subtotalInput.value = (cantidad * precio).toFixed(2);
+        
+        updateRecipeCost();
+    }
+
+    //Funcion para actualizar el costo total
+    function updateRecipeCost() {
+        const subtotales = document.querySelectorAll('#ingredientesFormBody .subtotal-input');
+        let costoTotal = 0;
+        
+        subtotales.forEach(input => {
+            costoTotal += parseFloat(input.value) || 0;
+        });
+            
+        document.querySelector('#costo_receta').value = costoTotal.toFixed(2);
+    }                               
+
 
     // Ver Ingredientes button handler
     document.addEventListener('click', async (e) => {
@@ -80,14 +146,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const template = document.querySelector("#templateIngrediente");
         const tbody = document.querySelector("#ingredientesFormBody");
         const clone = template.content.cloneNode(true);
+        
+        // Agregar event listeners
+        const selectMaterial = clone.querySelector('.material-select');
+        const cantidadInput = clone.querySelector('.cantidad-input');
+        
+        selectMaterial.addEventListener('change', handleMaterialChange);
+        cantidadInput.addEventListener('input', calculateSubtotal);
+        
         tbody.appendChild(clone);
     });
 
     // Eliminar ingrediente
     document.addEventListener('click', (e) => {
-        if (e.target.matches('.btnEliminarIngrediente') || e.target.closest('.btnEliminarIngrediente')) {
+            if (e.target.matches('.btnEliminarIngrediente') || e.target.closest('.btnEliminarIngrediente')) {
             const button = e.target.closest('.btnEliminarIngrediente');
             button.closest('tr').remove();
+            updateRecipeCost(); // Agregar esta línea
         }
     });
 
