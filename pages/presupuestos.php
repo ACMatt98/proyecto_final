@@ -109,9 +109,10 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Cliente</label>
-                                    <select class="form-select" id="id_cliente" required>
+                                    <select class="form-select" id="id_cliente" name="id_cliente" required>
+                                        <option value="">Seleccione un cliente...</option>
                                         <?php
-                                        $consulta = "SELECT id_cliente, CONCAT(nombre_cliente, ' ', apellido_cliente) AS nombre FROM cliente";
+                                        $consulta = "SELECT id_cliente, CONCAT(nombre_cliente, ' ', apellido_cliente) AS nombre FROM cliente ORDER BY nombre";
                                         $resultado = $conexion->prepare($consulta);
                                         $resultado->execute();
                                         while ($row = $resultado->fetch(PDO::FETCH_ASSOC)) {
@@ -122,13 +123,13 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Fecha</label>
-                                    <input type="date" class="form-control" id="fecha_presup" required>
+                                    <input type="date" class="form-control" id="fecha_presup" name="fecha_presup" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Estado</label>
-                                    <select class="form-select" id="id_estado_presupuesto" required>
+                                    <select class="form-select" id="id_estado_presupuesto" name="id_estado_presupuesto" required>
                                         <?php
                                         $consulta = "SELECT * FROM estado_presup";
                                         $resultado = $conexion->prepare($consulta);
@@ -141,17 +142,17 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Monto Total</label>
-                                    <input type="number" step="0.01" class="form-control" id="precio_total_presup" required>
+                                    <input type="number" step="0.01" class="form-control" id="precio_total_presup" name="precio_total_presup" readonly>
                                 </div>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Lugar de Entrega</label>
-                            <input type="text" class="form-control" id="lugar" required>
+                            <input type="text" class="form-control" id="lugar" name="lugar" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Mano de Obra</label>
-                            <input type="number" step="0.01" class="form-control" id="mano_obra" required>
+                            <input type="number" step="0.01" class="form-control" id="mano_obra" name="mano_obra" value="0" required>
                         </div>
 
                         <div class="mb-3">
@@ -160,8 +161,9 @@
                                 <!-- Productos se agregarán aquí dinámicamente -->
                             </div>
                             <select class="form-select mb-2" id="select-productos">
+                                <option value="">Seleccione un producto...</option>
                                 <?php
-                                $consulta = "SELECT id_producto_term, nomb_producto, precio_venta FROM producto_terminado";
+                                $consulta = "SELECT id_producto_term, nomb_producto, precio_venta FROM producto_terminado ORDER BY nomb_producto";
                                 $resultado = $conexion->prepare($consulta);
                                 $resultado->execute();
                                 while ($row = $resultado->fetch(PDO::FETCH_ASSOC)) {
@@ -174,7 +176,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Observaciones</label>
-                            <textarea class="form-control" id="observaciones" rows="3"></textarea>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
                         </div>
 
 
@@ -188,41 +190,118 @@
         </div>
     </div>
 
-    <!-- Modal Seguimiento -->
+    <!-- INICIO: Modal Seguimiento Mejorado -->
     <div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
                     <h5 class="modal-title">Seguimiento de Presupuesto</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <form id="formSeguimiento">
+                    <div class="modal-body">
+                        <input type="hidden" id="seguimiento_id_presupuesto" name="id_presupuesto">
+                        <div class="row">
+                            <!-- Columna de Estado -->
+                            <div class="col-md-4 border-end">
+                                <h5>Estado</h5>
+                                <p>Seleccione para cambiar el estado si lo desea:</p>
+                                <div id="contenedor-estados-radio">
+                                    <!-- Los estados se cargarán aquí desde la BD -->
+                                </div>
+                                <p class="mt-3">El presupuesto se encuentra en estado: <strong id="estado-actual-texto"></strong></p>
+                                <button type="submit" class="btn btn-primary">Actualizar Estado</button>
+                            </div>
+
+                            <!-- Columna de Observaciones y Materiales -->
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Observaciones</h5>
+                                        <p>Detalles del trabajo:</p>
+                                        <textarea class="form-control" id="seguimiento_observaciones" name="observaciones" rows="5" readonly></textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Stock</h5>
+                                        <p>Materiales necesarios para el trabajo:</p>
+                                        <div class="border p-2" style="height: 200px; overflow-y: auto;">
+                                            <ul class="list-group list-group-flush" id="lista-materiales-requeridos">
+                                                <!-- Se llenará dinámicamente -->
+                                            </ul>
+                                        </div>
+                                        <button type="button" class="btn btn-success mt-2" id="btn-descontar-stock" disabled>Descontar de Stock</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- FIN: Modal Seguimiento Mejorado -->
+
+
+    <!-- INICIO: Modal para Cobros -->
+    <div class="modal fade" id="modalCobro" tabindex="-1" aria-labelledby="modalCobroLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCobroLabel">Gestión de Cobro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
                 <div class="modal-body">
+                    <input type="hidden" id="cobro_id_presupuesto">
+                    
+                    <h6>Resumen de Saldos</h6>
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <td><strong>Total Presupuesto</strong></td>
+                                <td id="cobro-saldo-total" class="text-end">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>Seña Recibida</td>
+                                <td id="cobro-seña" class="text-end text-success">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>Otros Pagos</td>
+                                <td id="cobro-pagos" class="text-end text-success">$0.00</td>
+                            </tr>
+                            <tr class="table-secondary">
+                                <td><strong>Saldo Pendiente</strong></td>
+                                <td id="cobro-saldo-pendiente" class="text-end fw-bold">$0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <hr>
+
+                    <h6>Registrar Pagos</h6>
                     <div class="mb-3">
-                        <label class="form-label">Estado Actual</label>
-                        <select class="form-select" id="estado_seguimiento">
-                            <option value="1">Completado</option>
-                            <option value="2">En proceso</option>
-                            <option value="3">Cancelado</option>
-                        </select>
+                        <label for="cobro-input-seña" class="form-label">Registrar Seña</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="cobro-input-seña" placeholder="Monto de la seña">
+                            <button class="btn btn-primary" type="button" id="btn-registrar-seña">Registrar</button>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Observaciones</label>
-                        <textarea class="form-control" id="observaciones_seguimiento" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Materiales Requeridos</label>
-                        <ul class="list-group" id="lista-materiales">
-                            <!-- Se llenará dinámicamente -->
-                        </ul>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" type="button" id="btn-registrar-pago">Registrar Pago Final / Parcial</button>
+                        <button class="btn btn-info" type="button" id="btn-imprimir-recibo" disabled>Imprimir Recibo de Pago</button>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary">Guardar Cambios</button>
                 </div>
             </div>
         </div>
     </div>
+    <!-- FIN: Modal para Cobros -->
 
 
     <!-- Modal Visualizar Presupuesto -->

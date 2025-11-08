@@ -61,6 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (result.success) {
                 precioInput.value = result.precio_unitario;
+                // Guardamos la unidad del precio en el input
+                precioInput.dataset.unidad = result.unidad_precio;
                 calculateSubtotal({ target: cantidadInput });
             } else {
                 precioInput.value = '0.00';
@@ -73,17 +75,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    //Funcion para calcular el subtotal
+    //Funcion para calcular el subtotal CON CONVERSIÓN DE UNIDADES
     function calculateSubtotal(event) {
-        const cantidadInput = event.target;
-        const row = cantidadInput.closest('tr');
+        const input = event.target;
+        const row = input.closest('tr');
+        
+        const cantidadInput = row.querySelector('.cantidad-input');
+        const unidadRecetaInput = row.querySelector('.unidad-input');
         const precioInput = row.querySelector('.precio-input');
         const subtotalInput = row.querySelector('.subtotal-input');
+
+        let cantidad = parseFloat(cantidadInput.value) || 0;
+        const unidadReceta = unidadRecetaInput.value;
         
-        const cantidad = parseFloat(cantidadInput.value) || 0;
-        const precio = parseFloat(precioInput.value) || 0;
-        
-        subtotalInput.value = (cantidad * precio).toFixed(2);
+        const precioBase = parseFloat(precioInput.value) || 0;
+        const unidadPrecio = precioInput.dataset.unidad; // 'Kg', 'gr', 'Lt', 'ml', 'Unidad'
+
+        let precioFinal = precioBase;
+
+        // --- Lógica de Conversión ---
+        // De Kilos a Gramos
+        if (unidadPrecio === 'Kg' && unidadReceta === 'gr') {
+            precioFinal = precioBase / 1000; // Precio por gramo
+        }
+        // De Litros a Mililitros
+        else if (unidadPrecio === 'Lt' && unidadReceta === 'ml') {
+            precioFinal = precioBase / 1000; // Precio por mililitro
+        }
+        // De Gramos a Kilos (menos común, pero posible)
+        else if (unidadPrecio === 'gr' && unidadReceta === 'Kg') {
+            precioFinal = precioBase * 1000; // Precio por kilo
+        }
+        // De Mililitros a Litros (menos común)
+        else if (unidadPrecio === 'ml' && unidadReceta === 'Lt') {
+            precioFinal = precioBase * 1000; // Precio por litro
+        }
+
+        subtotalInput.value = (cantidad * precioFinal).toFixed(2);
         
         updateRecipeCost();
     }
@@ -108,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const id_receta = parseInt(fila.cells[0].textContent);
             
             try {
-                const response = await fetch('proyecto_final/bd/get_ingredientes.php', {
+                const response = await fetch('bd/get_ingredientes.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -199,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Cargar ingredientes existentes
             try {
-                const response = await fetch('proyecto_final/bd/get_ingredientes.php', {
+                const response = await fetch('bd/get_ingredientes.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -213,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tbody = document.querySelector("#ingredientesFormBody");
                 tbody.innerHTML = '';
                 
-                ingredientes.forEach(ingrediente => {
+                ingredientes.forEach(async (ingrediente) => {
                     const template = document.querySelector("#templateIngrediente");
                     const clone = template.content.cloneNode(true);
                     
@@ -221,14 +249,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     const inputCantidad = clone.querySelector('.cantidad-input');
                     const inputUnidad = clone.querySelector('.unidad-input');
                     
-                    Array.from(selectMaterial.options).forEach(option => {
-                        if (option.text === ingrediente.nombre_material) option.selected = true;
-                    });
+                    // AGREGAR EVENT LISTENERS PRIMERO
+                    selectMaterial.addEventListener('change', handleMaterialChange);
+                    inputCantidad.addEventListener('input', calculateSubtotal);
                     
+                    // Seleccionar el material por ID (más confiable que por nombre)
+                    selectMaterial.value = ingrediente.id_materiales;
                     inputCantidad.value = ingrediente.cantidad_nec;
                     inputUnidad.value = ingrediente.unidad_medida;
                     
                     tbody.appendChild(clone);
+                    
+                    // EJECUTAR la función para obtener el precio DESPUÉS de agregar al DOM
+                    if (selectMaterial.value) {
+                        await handleMaterialChange({ target: selectMaterial });
+                    }
                 });
             } catch (error) {
                 console.error('Error:', error);
@@ -329,40 +364,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const result = await response.json();
         
-        if (!result.success) {
+        if (result.success) {
+            const modalCRUD = bootstrap.Modal.getInstance(document.querySelector("#modalCRUD"));
+            modalCRUD.hide();
+            alert(result.message);
+
+            if (opcion === 1) { // Si es ALTA, agregamos la fila manualmente
+                const nuevaFila = result.data;
+                tablaRecetas.row.add([
+                    nuevaFila.id_receta_estandar,
+                    nuevaFila.nomb_receta,
+                    nuevaFila.costo_receta,
+                    nuevaFila.nomb_producto,
+                    '<button class="btn btn-info btn-sm btnIngredientes">Ver Ingredientes</button>', // Botón Ingredientes
+                    null  // La columna de acciones se genera por defaultContent
+                ]).draw();
+            } else { // Si es EDICIÓN o cualquier otro caso de éxito, recargamos la página
+                location.reload();
+            }
+
+        } else {
+            // Si el servidor devuelve success: false, mostramos el error
             throw new Error(result.message);
         }
-        
-        const { data } = result;
-        const { id_receta_estandar: newId, nomb_receta, costo_receta, nomb_producto } = data[0];
 
-        if (opcion === 1) {
-            tablaRecetas.row.add([
-                newId, 
-                nomb_receta, 
-                costo_receta, 
-                nomb_producto,
-                '<button class="btn btn-info btnIngredientes">Ver Ingredientes</button>',
-                ''
-            ]).draw();
-        } else {
-            tablaRecetas.row(fila).data([
-                newId, 
-                nomb_receta, 
-                costo_receta, 
-                nomb_producto,
-                '<button class="btn btn-info btnIngredientes">Ver Ingredientes</button>',
-                ''
-            ]).draw();
-        }
-
-        const modalCRUD = bootstrap.Modal.getInstance(document.querySelector("#modalCRUD"));
-        modalCRUD.hide();
-        
-        alert(result.message || 'Operación realizada con éxito');
     } catch (error) {
         console.error('Error:', error);
-        alert(error.message || 'Error al guardar los datos');
+        alert(error.message || 'No se pudo guardar la receta.');
     }
 });
 });

@@ -1,5 +1,5 @@
 <?php
-include_once 'bd/conexion.php';
+include_once 'conexion.php';
 $objeto = new Conexion();
 $conexion = $objeto->Conectar();
 
@@ -8,7 +8,7 @@ $data = json_decode($json, true);
 
 $id_receta = (isset($data['id_receta'])) ? $data['id_receta'] : '';
 
-$consulta = "SELECT m.nombre_material, dr.cantidad_nec, dr.unidad_medida 
+$consulta = "SELECT m.nombre_material, dr.cantidad_nec, dr.unidad_medida, dr.id_materiales
             FROM detalle_receta dr 
             JOIN materiales m ON dr.id_materiales = m.id_materiales 
             WHERE dr.id_receta_estandar = ?";

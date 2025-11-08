@@ -9,56 +9,78 @@ try {
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
 
-    $id = isset($data['id']) ? intval($data['id']) : null;
-    $nombre_material = trim($data['nombre_material'] ?? '');
-    $existencia = floatval($data['existencia'] ?? 0);
-    $marca = trim($data['marca'] ?? '');
-    $unidad_medida = trim($data['unidad_medida'] ?? '');
-    $opcion = intval($data['opcion'] ?? 0);
+    if ($data === null) {
+        throw new Exception('Error al decodificar JSON');
+    }
 
-    if ($opcion === 1) {
-        // Alta
-        if (!$nombre_material || !$existencia || !$marca || !$unidad_medida) {
-            throw new Exception('Todos los campos son obligatorios');
-        }
-        $consulta = "INSERT INTO comprobantecompra (fecha, n_de_comprob, precio_total, id_proveedor, tipo_factura) 
-                    VALUES (:fecha, :n_de_comprob, :precio_total, :id_proveedor, :tipo_factura)";
-        $resultado = $conexion->prepare($consulta);
-        $resultado->execute([
-        ':fecha' => $fecha,
-        ':n_de_comprob' => $n_de_comprob,
-        ':precio_total' => $precio_total,
-        ':id_proveedor' => $id_proveedor,
-        ':tipo_factura' => $tipo_factura
-]);
-        $response = ['success' => true, 'message' => 'Material creado'];
-    } elseif ($opcion === 2 && $id) {
-        // Edición
-        if (!$nombre_material || !$existencia || !$marca || !$unidad_medida) {
-            throw new Exception('Todos los campos son obligatorios');
-        }
-        $consulta = "UPDATE comprobantecompra SET fecha=:fecha, n_de_comprob=:n_de_comprob, precio_total=:precio_total, id_proveedor=:id_proveedor, tipo_factura=:tipo_factura WHERE id_compro_comp=:id";
-        $resultado = $conexion->prepare($consulta);
-        $resultado->execute([
-            ':fecha' => $fecha,
-            ':n_de_comprob' => $n_de_comprob,
-            ':precio_total' => $precio_total,
-            ':id_proveedor' => $id_proveedor,
-            ':tipo_factura' => $tipo_factura,
-            ':id' => $id
-]);
-        $response = ['success' => true, 'message' => 'Material actualizado'];
-    } elseif ($opcion === 3 && $id) {
-        // Borrar
-        $consulta = "DELETE FROM materiales WHERE id_materiales=:id";
-        $stmt = $conexion->prepare($consulta);
-        $stmt->execute([':id' => $id]);
-        $response = ['success' => true, 'message' => 'Material eliminado'];
-    } else {
-        throw new Exception('Operación no válida');
+    $opcion = intval($data['opcion'] ?? 0);
+    $id = isset($data['id']) ? intval($data['id']) : null;
+    
+    switch ($opcion) {
+        case 1: // ALTA
+            $nombre_material = trim($data['nombre_material'] ?? '');
+            $existencia = floatval($data['existencia'] ?? 0);
+            $marca = trim($data['marca'] ?? '');
+            $unidad_medida = trim($data['unidad_medida'] ?? '');
+
+            if (empty($nombre_material) || empty($marca) || empty($unidad_medida)) {
+                throw new Exception('Todos los campos son obligatorios');
+            }
+
+            $consulta = "INSERT INTO materiales (nombre_material, existencia, marca, unidad_medida) VALUES (:nombre, :existencia, :marca, :unidad)";
+            $resultado = $conexion->prepare($consulta);
+            $resultado->execute([
+                ':nombre' => $nombre_material,
+                ':existencia' => $existencia,
+                ':marca' => $marca,
+                ':unidad' => $unidad_medida
+            ]);
+            $response = ['success' => true, 'message' => 'Material creado correctamente'];
+            break;
+
+        case 2: // MODIFICACIÓN
+            if (!$id) throw new Exception('ID de material no válido');
+
+            $nombre_material = trim($data['nombre_material'] ?? '');
+            $existencia = floatval($data['existencia'] ?? 0);
+            $marca = trim($data['marca'] ?? '');
+            $unidad_medida = trim($data['unidad_medida'] ?? '');
+
+            if (empty($nombre_material) || empty($marca) || empty($unidad_medida)) {
+                throw new Exception('Todos los campos son obligatorios');
+            }
+
+            $consulta = "UPDATE materiales SET nombre_material=:nombre, existencia=:existencia, marca=:marca, unidad_medida=:unidad WHERE id_materiales=:id";
+            $resultado = $conexion->prepare($consulta);
+            $resultado->execute([
+                ':nombre' => $nombre_material,
+                ':existencia' => $existencia,
+                ':marca' => $marca,
+                ':unidad' => $unidad_medida,
+                ':id' => $id
+            ]);
+            $response = ['success' => true, 'message' => 'Material actualizado correctamente'];
+            break;
+
+        case 3: // BAJA
+            if (!$id) throw new Exception('ID de material no válido');
+
+            $consulta = "DELETE FROM materiales WHERE id_materiales=:id";
+            $stmt = $conexion->prepare($consulta);
+            $stmt->execute([':id' => $id]);
+            $response = ['success' => true, 'message' => 'Material eliminado correctamente'];
+            break;
+
+        default:
+            throw new Exception('Operación no válida');
     }
 
     echo json_encode($response);
 
 } catch (Exception $e) {
-    echo json_encode(['success'
+    // CORRECCIÓN: Línea completada y con formato de error estándar
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+}
+
+$conexion = NULL;
+?>
