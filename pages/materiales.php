@@ -94,7 +94,14 @@
                             </div>
                             <div class="form-group">
                                 <label for="unidad_medida" class="col-form-label">Unidad de Medida:</label>
-                                <input type="text" class="form-control" id="unidad_medida" placeholder="Ej: kg, g, l, unidad">
+                                <select class="form-select" id="unidad_medida">
+                                    <option value="">Seleccione una unidad...</option>
+                                    <option value="gr">Gramos (gr)</option>
+                                    <option value="Kg">Kilos (Kg)</option>
+                                    <option value="ml">Mililitros (ml)</option>
+                                    <option value="Lt">Litros (Lt)</option>
+                                    <option value="Unidad">Unidad</option>
+                                </select>
                             </div>
                         </div>
                         <div class="modal-footer">

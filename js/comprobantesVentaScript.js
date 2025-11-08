@@ -67,6 +67,9 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('monto', document.querySelector("#monto").value);
         formData.append('tipo_factura', document.querySelector("#tipo_factura").value);
         formData.append('archivo', document.querySelector("#archivo").files[0]);
+        
+        // Añadimos la opción para que el backend sepa que es una CREACIÓN
+        formData.append('opcion', 1);
 
         try {
             const response = await fetch('bd/crud_comprobantes_venta.php', {
@@ -74,17 +77,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             });
 
-            if (!response.ok) throw new Error('Error en la red');
+            // Mejoramos el manejo de errores
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error en la red');
+            }
             
             const result = await response.json();
             if(result.success) {
+                alert(result.message);
                 location.reload();
             } else {
-                alert(result.message);
+                // Esto se ejecutará si el servidor responde con success: false
+                throw new Error(result.message);
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al guardar el comprobante');
+            alert(error.message || 'Error al guardar el comprobante');
         }
     });
 
@@ -110,6 +119,41 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Error:', error);
                 alert('Error al cargar el comprobante');
+            }
+        }
+    });
+    // Borrar comprobante
+    document.addEventListener('click', async function(e) {
+        if(e.target.closest('.btnBorrar')) {
+            const fila = e.target.closest("tr");
+            const id = fila.dataset.id; // Obtenemos el ID desde el atributo data-id
+            const n_comprob = fila.cells[0].textContent;
+
+            if(confirm(`¿Está seguro de eliminar el comprobante N° ${n_comprob}?`)) {
+                try {
+                    const formData = new FormData();
+                    formData.append('opcion', 3); // Opción para borrar
+                    formData.append('id', id);
+
+                    const response = await fetch('bd/crud_comprobantes_venta.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) throw new Error('Error en la respuesta del servidor.');
+
+                    const result = await response.json();
+
+                    if(result.success) {
+                        tablaComprobantes.row(fila).remove().draw();
+                        alert(result.message);
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert(error.message || 'No se pudo eliminar el comprobante.');
+                }
             }
         }
     });

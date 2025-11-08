@@ -55,7 +55,7 @@ $data = $resultado->fetchAll(PDO::FETCH_ASSOC);
                         </thead>
                         <tbody>
                             <?php foreach($data as $dat) { ?>
-                            <tr>
+                            <tr data-id="<?php echo $dat['id_comprob_vta'] ?>">
                                 <td><?php echo $dat['n_comprob_vta'] ?></td>
                                 <td><?php echo $dat['cliente'] ?></td>
                                 <td><?php echo $dat['fecha'] ?></td>

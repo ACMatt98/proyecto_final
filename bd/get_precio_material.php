@@ -15,36 +15,30 @@ try {
         throw new Exception('ID de material inválido');
     }
     
-    // Obtener el precio más reciente del material
-    $consulta = "SELECT precio_unitario, fecha_detalle 
-                FROM detallecomprob_cpra 
-                WHERE id_materiales = :id_material 
-                ORDER BY fecha_detalle DESC, id_detalle_comp_cpra DESC 
-                LIMIT 1";
+    // Modificamos la consulta para obtener también la unidad de medida del precio
+    $consulta = "SELECT precio_unitario, unidad_medida 
+                 FROM detallecomprob_cpra 
+                 WHERE id_materiales = :id_material 
+                 ORDER BY id_detalle_comp_cpra DESC 
+                 LIMIT 1";
     
     $stmt = $conexion->prepare($consulta);
     $stmt->execute([':id_material' => $id_material]);
     $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($resultado) {
+        // Devolvemos el precio y su unidad
         echo json_encode([
-            'success' => true,
+            'success' => true, 
             'precio_unitario' => $resultado['precio_unitario'],
-            'fecha_detalle' => $resultado['fecha_detalle']
+            'unidad_precio' => $resultado['unidad_medida'] 
         ]);
     } else {
-        echo json_encode([
-            'success' => false,
-            'precio_unitario' => 0,
-            'message' => 'No se encontró precio para este material'
-        ]);
+        echo json_encode(['success' => false, 'precio_unitario' => 0, 'unidad_precio' => '']);
     }
     
 } catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error: ' . $e->getMessage()
-    ]);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 
 $conexion = NULL;

@@ -78,7 +78,7 @@
 
         <!-- Modal para CRUD -->
         <div class="modal fade" id="modalCRUD" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="exampleModalLabel"></h5>
@@ -196,7 +196,13 @@
                     <input type="number" step="0.01" class="form-control cantidad-input" required>
                 </td>
                 <td>
-                    <input type="text" class="form-control unidad-input" required>
+                    <select class="form-control unidad-input" required>
+                        <option value="">Seleccione unidad</option>
+                        <option value="Kg">Kilo (Kg)</option>
+                        <option value="gr">Gramos (gr)</option>
+                        <option value="Lt">Litros (Lt)</option>
+                        <option value="Unidad">Unidad</option>
+                    </select>
                 </td>
                 <td>
                     <input type="number" step="0.01" class="form-control precio-input" readonly>
