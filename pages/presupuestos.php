@@ -1,5 +1,7 @@
 <?php
     include_once 'bd/conexion.php';
+    include_once 'bd/funciones.php';
+
     $objeto = new Conexion();
     $conexion = $objeto->Conectar();
 
@@ -28,6 +30,8 @@
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+
+    
     
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -65,7 +69,7 @@
                             <tr>
                                 <td style="display:none;"><?= $dat['id_presupuesto'] ?></td>
                                 <td><?= $dat['cliente'] ?></td>
-                                <td><?= $dat['fecha_presup'] ?></td>
+                                <td><?php echo FormatoFechas::cambiaFormatoFecha($dat['fecha_presup']) ?></td>
                                 <td>$<?= number_format($dat['precio_total_presup'], 2) ?></td>
                                 <td><?= $dat['estado'] ?></td>
                                 <td>

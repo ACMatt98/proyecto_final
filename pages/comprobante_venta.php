@@ -1,11 +1,13 @@
 <?php
 include_once 'bd/conexion.php';
+include_once 'bd/funciones.php';
+
 $objeto = new Conexion();
 $conexion = $objeto->Conectar();
 
 $consulta = "SELECT cv.id_comprob_vta, cv.n_comprob_vta, cv.tipo_factura_vta, 
             CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) as cliente,
-            co.fecha_cobro as fecha, co.precio_total_cobro as monto
+            co.fecha_cobro as fecha, co.monto as monto
             FROM comprobantevta cv
             LEFT JOIN cliente c ON cv.id_cliente = c.id_cliente
             LEFT JOIN cobro co ON cv.id_comprob_vta = co.id_comprob_vta
@@ -28,6 +30,8 @@ $data = $resultado->fetchAll(PDO::FETCH_ASSOC);
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
         <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
         
+        
+
         <!-- Bootstrap -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -58,7 +62,7 @@ $data = $resultado->fetchAll(PDO::FETCH_ASSOC);
                             <tr data-id="<?php echo $dat['id_comprob_vta'] ?>">
                                 <td><?php echo $dat['n_comprob_vta'] ?></td>
                                 <td><?php echo $dat['cliente'] ?></td>
-                                <td><?php echo $dat['fecha'] ?></td>
+                                <td><?php echo FormatoFechas::cambiaFormatoFecha($dat['fecha']) ?></td>
                                 <td>$<?php echo number_format($dat['monto'], 2) ?></td>
                                 <td><?php echo $dat['tipo_factura_vta'] ?></td>
                                 <td></td>

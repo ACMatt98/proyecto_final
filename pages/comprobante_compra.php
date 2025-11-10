@@ -1,5 +1,7 @@
 <?php
     include_once 'bd/conexion.php';
+    include_once 'bd/funciones.php';
+    
     $objeto = new Conexion();
     $conexion = $objeto->Conectar();
 
@@ -23,6 +25,8 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
         <!-- DataTables CSS -->
         <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
+
+        
         
         <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
@@ -61,7 +65,7 @@
                                 ?>
                                 <tr>
                                     <td><?php echo $dat['id_compro_comp'] ?></td>
-                                    <td><?php echo $dat['fecha'] ?></td>
+                                    <td><?php echo FormatoFechas::cambiaFormatoFecha($dat['fecha']) ?></td>
                                     <td><?php echo $dat['n_de_comprob'] ?></td>
                                     <td><?php echo $dat['precio_total'] ?></td>
                                     <td><?php echo $dat['nombre_proveedor'] ?></td>
