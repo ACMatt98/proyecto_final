@@ -101,27 +101,57 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', async function(e) {
         if(e.target.closest('.btnVisualizar')) {
             const fila = e.target.closest("tr");
-            const id = fila.cells[0].textContent;
+            // NOTA: Asegúrate que la celda 0 tiene el N° de comprobante correcto.
+            const id = fila.cells[0].textContent; 
+
+            // Referencias al modal y visor
+            const visor = document.querySelector("#visorArchivo");
+            const modalElement = document.querySelector("#modalVisualizador");
+            const modalTitle = modalElement.querySelector(".modal-title");
+
+            // Limpiamos el visor antes de cargar
+            visor.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p>Cargando comprobante...</p></div>';
+            
+            const modalVisualizador = new bootstrap.Modal(modalElement);
+            modalVisualizador.show();
 
             try {
                 const response = await fetch(`bd/get_comprobante.php?id=${id}`);
-                const data = await response.json();
-
-                const visor = document.querySelector("#visorArchivo");
-                if(data.archivo.endsWith('.pdf')) {
-                    visor.innerHTML = `<embed src="${data.archivo}" width="100%" height="500px" type="application/pdf">`;
-                } else {
-                    visor.innerHTML = `<img src="${data.archivo}" class="img-fluid">`;
+                
+                if (!response.ok) {
+                    throw new Error('Error al conectar con el servidor');
                 }
 
-                const modalVisualizador = new bootstrap.Modal(document.querySelector("#modalVisualizador"));
-                modalVisualizador.show();
+                const data = await response.json();
+
+                if(!data.success) {
+                    visor.innerHTML = `<div class="alert alert-warning text-center">${data.message || 'No se encontró información.'}</div>`;
+                    return;
+                }
+
+                // CASO A: Es un archivo (Imagen o PDF)
+                if (data.tipo === 'archivo') {
+                    modalTitle.textContent = "Visualizar Comprobante (Archivo)";
+                    if(data.contenido.endsWith('.pdf')) {
+                        visor.innerHTML = `<embed src="${data.contenido}" width="100%" height="500px" type="application/pdf">`;
+                    } else {
+                        visor.innerHTML = `<img src="${data.contenido}" class="img-fluid" alt="Comprobante">`;
+                    }
+                } 
+                // CASO B: Es un Ticket Generado (HTML)
+                else if (data.tipo === 'html') {
+                    modalTitle.textContent = "Ticket de Pago Digital";
+                    // Insertamos el HTML del ticket directamente
+                    visor.innerHTML = data.contenido;
+                }
+
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error al cargar el comprobante');
+                visor.innerHTML = `<div class="alert alert-danger">Error al cargar el comprobante: ${error.message}</div>`;
             }
         }
     });
+    
     // Borrar comprobante
     document.addEventListener('click', async function(e) {
         if(e.target.closest('.btnBorrar')) {
