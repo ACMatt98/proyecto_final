@@ -42,7 +42,7 @@ $data = $resultado->fetchAll(PDO::FETCH_ASSOC);
         
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <button id="btnNuevo" class="btn btn-success">+ Agregar</button>
+                <button id="btnNuevo" class="btn btn-success d-none">+ Agregar</button>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -53,7 +53,7 @@ $data = $resultado->fetchAll(PDO::FETCH_ASSOC);
                                 <th>Cliente</th>
                                 <th>Fecha</th>
                                 <th>Monto</th>
-                                <th>Factura</th>
+                                <th class="d-none" >Factura</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -64,7 +64,7 @@ $data = $resultado->fetchAll(PDO::FETCH_ASSOC);
                                 <td><?php echo $dat['cliente'] ?></td>
                                 <td><?php echo FormatoFechas::cambiaFormatoFecha($dat['fecha']) ?></td>
                                 <td>$<?php echo number_format($dat['monto'], 2) ?></td>
-                                <td><?php echo $dat['tipo_factura_vta'] ?></td>
+                                <td class="d-none" ><?php echo $dat['tipo_factura_vta'] ?></td>
                                 <td></td>
                             </tr>
                             <?php } ?>
@@ -134,6 +134,12 @@ $data = $resultado->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="modal-body">
                         <div id="visorArchivo"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" id="btnImprimirComprobante">
+                            Imprimir
+                        </button>
                     </div>
                 </div>
             </div>

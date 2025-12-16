@@ -128,7 +128,7 @@ try {
             $response = ['success' => true, 'message' => 'Stock descontado correctamente.'];
             break;
 
-        case 6: // REGISTRAR SEÑA
+       case 6: // REGISTRAR SEÑA
         case 7: // REGISTRAR PAGO
             if (!$id || !isset($_POST['monto'])) {
                 throw new Exception("Faltan datos para registrar el cobro (ID o monto).");
@@ -137,28 +137,38 @@ try {
             $monto = floatval($_POST['monto']);
             $tipo_cobro = ($opcion == 6) ? 'Seña' : 'Pago';
             $fecha_actual = date('Y-m-d');
+        
+            // 1. Obtener el id_cliente desde el presupuesto
+            $stmt_cliente = $conexion->prepare("SELECT id_cliente FROM presupuesto WHERE id_presupuesto = ?");
+            $stmt_cliente->execute([$id]);
+            $cliente = $stmt_cliente->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$cliente) {
+                throw new Exception("No se encontró el presupuesto para asociar el cliente.");
+            }
+            $id_cliente = $cliente['id_cliente'];
 
-                // 1. Obtener el id_cliente desde el presupuesto
-                $stmt_cliente = $conexion->prepare("SELECT id_cliente FROM presupuesto WHERE id_presupuesto = ?");
-                $stmt_cliente->execute([$id]);
-                $cliente = $stmt_cliente->fetch(PDO::FETCH_ASSOC);
-                if (!$cliente) {
-                    throw new Exception("No se encontró el presupuesto para asociar el cliente.");
-                }
-                $id_cliente = $cliente['id_cliente'];
+            // 2. CALCULAR EL SIGUIENTE NÚMERO DE COMPROBANTE
+            // Esto evita que se guarde como 0
+            $stmt_num = $conexion->prepare("SELECT MAX(n_comprob_vta) as ultimo FROM comprobantevta");
+            $stmt_num->execute();
+            $fila_num = $stmt_num->fetch(PDO::FETCH_ASSOC);
+            // Si hay registros toma el último + 1, si no, empieza en 1.
+            $nuevo_n_comprob = $fila_num['ultimo'] ? $fila_num['ultimo'] + 1 : 1;
 
-                // 2. Crear el comprobante de venta
-                $stmt_comprob = $conexion->prepare("INSERT INTO comprobantevta (fecha_comprob, total_comprob_vta, id_cliente) VALUES (?, ?, ?)");
-                $stmt_comprob->execute([$fecha_actual, $monto, $id_cliente]);
-                
-                // 3. Obtener el ID del comprobante recién creado
-                $id_comprob_vta = $conexion->lastInsertId();
+            // 3. Insertar Comprobante
+            // NOTA: Pasamos 'B' fijo como tipo de factura para evitar errores si la columna existe.
+            $stmt_comprob = $conexion->prepare("INSERT INTO comprobantevta (n_comprob_vta, fecha_comprob, total_comprob_vta, id_cliente, tipo_factura_vta) VALUES (?, ?, ?, ?, ?)");
+            $stmt_comprob->execute([$nuevo_n_comprob, $fecha_actual, $monto, $id_cliente, 'B']); 
+            
+            // 4. Obtener el ID interno
+            $id_comprob_vta = $conexion->lastInsertId();
 
-                // 4. Registrar el cobro, asociándolo al presupuesto y al nuevo comprobante
-                $stmt_cobro = $conexion->prepare("INSERT INTO cobro (id_presupuesto, id_comprob_vta, fecha_cobro, monto, tipo_cobro) VALUES (?, ?, ?, ?, ?)");
-                $stmt_cobro->execute([$id, $id_comprob_vta, $fecha_actual, $monto, $tipo_cobro]);
+            // 5. Registrar el cobro
+            $stmt_cobro = $conexion->prepare("INSERT INTO cobro (id_presupuesto, id_comprob_vta, fecha_cobro, monto, tipo_cobro) VALUES (?, ?, ?, ?, ?)");
+            $stmt_cobro->execute([$id, $id_comprob_vta, $fecha_actual, $monto, $tipo_cobro]);
 
-                $response = ['success' => true, 'message' => $tipo_cobro . ' registrado correctamente.'];
+            $response = ['success' => true, 'message' => $tipo_cobro . ' registrado correctamente. N° Comprobante: ' . $nuevo_n_comprob];
             break;
     }
 

@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('tipo_factura', document.querySelector("#tipo_factura").value);
         formData.append('archivo', document.querySelector("#archivo").files[0]);
         
-        // Añadimos la opción para que el backend sepa que es una CREACIÓN
+        // Se añade la opción  CREACIÓN
         formData.append('opcion', 1);
 
         try {
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             });
 
-            // Mejoramos el manejo de errores
+            //manejo de errores
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Error en la red');
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert(result.message);
                 location.reload();
             } else {
-                // Esto se ejecutará si el servidor responde con success: false
+                // Esto se ejecuta si el servidor responde con success: false
                 throw new Error(result.message);
             }
         } catch (error) {
@@ -101,23 +101,30 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', async function(e) {
         if(e.target.closest('.btnVisualizar')) {
             const fila = e.target.closest("tr");
-            // NOTA: Asegúrate que la celda 0 tiene el N° de comprobante correcto.
-            const id = fila.cells[0].textContent; 
+            // 1. CAPTURAr AMBOS IDs
+            const idInterno = fila.dataset.id;        // Para Imprimir (ID único de la BD)
+            const nComprobante = fila.cells[0].textContent; // Para Visualizar (Número que se ve en la tabla)
+
+            // 2. ASIGNAMOS EL ID INTERNO AL BOTÓN DE IMPRIMIR
+            // Esto asegura que al imprimir busque el registro exacto en la BD
+            const btnImprimir = document.querySelector("#btnImprimirComprobante");
+            if(btnImprimir) btnImprimir.dataset.id = idInterno;
 
             // Referencias al modal y visor
             const visor = document.querySelector("#visorArchivo");
             const modalElement = document.querySelector("#modalVisualizador");
             const modalTitle = modalElement.querySelector(".modal-title");
 
-            // Limpiamos el visor antes de cargar
+            // Limpiar visor antes de cargar
             visor.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p>Cargando comprobante...</p></div>';
             
             const modalVisualizador = new bootstrap.Modal(modalElement);
             modalVisualizador.show();
 
             try {
-                const response = await fetch(`bd/get_comprobante.php?id=${id}`);
-                
+
+                const response = await fetch(`bd/get_comprobante.php?id=${nComprobante}`);
+
                 if (!response.ok) {
                     throw new Error('Error al conectar con el servidor');
                 }
@@ -184,6 +191,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error:', error);
                     alert(error.message || 'No se pudo eliminar el comprobante.');
                 }
+            }
+        }
+    });
+
+    // Boton imprimir dentro del modal de visualización
+    document.addEventListener('click', function(e) {
+        // Verificamos si el clic fue en el botón de imprimir (o en su icono)
+        const btn = e.target.closest('#btnImprimirComprobante');
+        
+        if (btn) {
+            // Recuperamos el ID que guardamos al abrir el modal
+            const idParaImprimir = btn.dataset.id;
+            
+            if (idParaImprimir) {
+                // se abre generador de ticket en una pestaña nueva
+                window.open(`bd/imprimir_ticket.php?id=${idParaImprimir}`, '_blank');
+            } else {
+                alert("Error: No se ha cargado un comprobante.");
             }
         }
     });

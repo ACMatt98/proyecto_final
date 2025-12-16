@@ -86,7 +86,7 @@
                                         <div class='btn-group'>
                                             <button class='btn btn-info btnSeguimiento'><i class="bi bi-clipboard-check"></i></button>
                                             <button class='btn btn-success btnCobro'><i class="bi bi-cash-coin"></i></button>
-                                            <button class='btn btn-secondary btnImprimir'><i class="bi bi-printer"></i></button>
+                                            <button class='btn btn-secondary btnImprimir d-none'><i class="bi bi-printer "></i></button>
                                         </div>
                                     </div>
                                 </td>
@@ -298,7 +298,7 @@
 
                     <div class="d-grid gap-2">
                         <button class="btn btn-success" type="button" id="btn-registrar-pago">Registrar Pago Final / Parcial</button>
-                        <button class="btn btn-info" type="button" id="btn-imprimir-recibo" disabled>Imprimir Recibo de Pago</button>
+                        <button class="btn btn-info d-none" type="button" id="btn-imprimir-recibo" disabled>Imprimir Recibo de Pago</button>
                     </div>
                 </div>
                 <div class="modal-footer">

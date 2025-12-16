@@ -40,6 +40,19 @@ $monto = isset($monto) ? $monto : 0;
         .total-row { border-top: 2px solid #333; font-size: 1.2em; }
         .logo-text { font-size: 24px; font-weight: bold; color: #333; margin-bottom: 5px; }
         .sub-text { font-size: 12px; color: #777; }
+        /* ESTILOS PARA IMPRESIÓN */
+        @media print {
+            body { margin: 0; padding: 0; background-color: white; }
+            #ticket-container { background-color: white; padding: 0; margin: 0; width: 100%; }
+            .ticket-box { 
+                box-shadow: none; 
+                border: none; 
+                max-width: 100%; 
+                margin: 0; 
+                padding: 0; 
+            }
+            .no-print { display: none; } 
+        }
     </style>
 </head>
 <body>
