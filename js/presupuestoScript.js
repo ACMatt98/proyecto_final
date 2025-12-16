@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch(`bd/obtener_presupuesto.php?id=${id}`);
                 const resultado = await response.json();
+                document.querySelector("#btnImprimirModal").dataset.id = id;
                 if (!resultado.success) throw new Error(resultado.error);
                 
                 const presupuesto = resultado.data;
@@ -426,4 +427,20 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(error.message || 'Error al actualizar el estado.');
         }
     });
+
+    // Listener para el botón Imprimir del Modal
+document.addEventListener('click', function(e) {
+    if(e.target && e.target.id === 'btnImprimirModal') {
+        // Recuperamos el ID que guardamos antes
+        const idParaImprimir = e.target.dataset.id;
+        
+        if (idParaImprimir) {
+            // Abrimos la pestaña de impresión
+            const url = `bd/imprimir_presupuesto.php?id=${idParaImprimir}`;
+            window.open(url, '_blank');
+        } else {
+            alert("No hay un presupuesto cargado para imprimir.");
+        }
+    }
+});
 });

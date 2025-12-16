@@ -131,7 +131,7 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3">
+                                 <div class="mb-3">
                                     <label class="form-label">Estado</label>
                                     <select class="form-select" id="id_estado_presupuesto" name="id_estado_presupuesto" required>
                                         <?php
@@ -144,6 +144,8 @@
                                         ?>
                                     </select>
                                 </div>
+
+                                
                                 <div class="mb-3">
                                     <label class="form-label">Monto Total</label>
                                     <input type="number" step="0.01" class="form-control" id="precio_total_presup" name="precio_total_presup" readonly>
@@ -365,7 +367,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" onclick="window.print()">
+                <button type="button" class="btn btn-primary" id="btnImprimirModal">
                     <i class="bi bi-printer"></i> Imprimir
                 </button>
             </div>
